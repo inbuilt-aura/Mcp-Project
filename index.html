@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MCP Filesystem Client</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f2f5;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+      
+      .header h1 {
+        font-size: 28px;
+        font-weight: 300;
+        margin-bottom: 8px;
+      }
+      
+      .header p {
+        opacity: 0.9;
+        font-size: 16px;
+      }
+      
+      .content {
+        padding: 30px;
+      }
+      
+      .section {
+        margin-bottom: 30px;
+      }
+      
+      .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+        border-left: 4px solid #667eea;
+        padding-left: 12px;
+      }
+      
+      #dropZone {
+        border: 2px dashed #d1d5db;
+        padding: 40px 20px;
+        text-align: center;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background-color: #fafafa;
+      }
+      
+      #dropZone:hover {
+        border-color: #667eea;
+        background-color: #f8faff;
+      }
+      
+      #dropZone.dragover {
+        border-color: #667eea;
+        background-color: #f0f4ff;
+        transform: scale(1.02);
+      }
+      
+      .drop-text {
+        font-size: 16px;
+        color: #666;
+        margin-top: 10px;
+      }
+      
+      .drop-icon {
+        font-size: 48px;
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+      
+      #promptBox {
+        width: 100%;
+        height: 120px;
+        padding: 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        resize: vertical;
+        transition: border-color 0.3s ease;
+      }
+      
+      #promptBox:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      
+      .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        margin-top: 10px;
+      }
+      
+      .submit-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+      }
+      
+      #result {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #28a745;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 14px;
+        min-height: 20px;
+      }
+      
+      #fileList {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+      }
+      
+      .file-item {
+        display: flex;
+        align-items: center;
+        margin: 8px 0;
+        padding: 12px 15px;
+        background-color: white;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+      }
+      
+      .file-item:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+      }
+      
+      .file-icon {
+        margin-right: 10px;
+        font-size: 16px;
+      }
+      
+      .file-name {
+        flex: 1;
+        font-weight: 500;
+        color: #333;
+      }
+      
+      .file-size {
+        color: #666;
+        font-size: 12px;
+      }
+      
+      .commands-help {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        border-left: 4px solid #17a2b8;
+      }
+      
+      .commands-help h4 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+      
+      .commands-help code {
+        background: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 12px;
+        color: #495057;
+      }
+      
+      .command-example {
+        margin: 5px 0;
+        font-size: 13px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>MCP Filesystem Client</h1>
+        <p>Upload, create, edit, and manage files through MCP server</p>
+      </div>
+      
+      <div class="content">
+        <div class="section">
+          <div class="section-title">📁 File Upload</div>
+          <div id="dropZone">
+            <div class="drop-icon">📤</div>
+            <div>Drop files here or click to upload</div>
+            <div class="drop-text">Support for multiple files</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">📋 File Management</div>
+          <div id="fileList"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">⌨️ MCP Commands</div>
+          <textarea
+            id="promptBox"
+            placeholder="Enter MCP command here..."
+          ></textarea>
+          <button class="submit-btn" onclick="sendCommand()">Execute Command</button>
+          
+          <div class="commands-help">
+            <h4>Available Commands:</h4>
+            <div class="command-example"><code>create filename.txt Hello World</code> - Create new file</div>
+            <div class="command-example"><code>edit filename.txt New Content</code> - Edit existing file</div>
+            <div class="command-example"><code>delete filename.txt</code> - Delete file</div>
+            <div class="command-example"><code>read filename.txt</code> - Read file content</div>
+            <div class="command-example"><code>list</code> - List all files</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">📤 Result</div>
+          <div id="result">Ready to execute commands...</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const dropZone = document.getElementById("dropZone");
+      const promptBox = document.getElementById("promptBox");
+      const resultDiv = document.getElementById("result");
+      const fileListDiv = document.getElementById("fileList");
+
+      // Handle drag and drop events
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+      });
+
+      dropZone.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+      });
+
+      // Handle click to upload
+      dropZone.addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.multiple = true;
+        input.onchange = (e) => {
+          handleFiles(e.target.files);
+        };
+        input.click();
+      });
+
+      async function handleFiles(files) {
+        if (files.length === 0) return;
+        
+        resultDiv.innerText = "Uploading files...";
+        fileListDiv.innerHTML = "";
+        
+        for (let file of files) {
+          try {
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            const response = await fetch("http://localhost:3000/upload", {
+              method: "POST",
+              body: formData,
+            });
+            
+            const data = await response.json();
+            
+            const fileItem = document.createElement("div");
+            fileItem.className = "file-item";
+            fileItem.innerHTML = `
+              <span class="file-icon">✅</span>
+              <span class="file-name">${file.name}</span>
+              <span class="file-size">${(file.size / 1024).toFixed(1)} KB</span>
+            `;
+            fileListDiv.appendChild(fileItem);
+            
+          } catch (error) {
+            const fileItem = document.createElement("div");
+            fileItem.className = "file-item";
+            fileItem.style.borderLeftColor = "#dc3545";
+            fileItem.innerHTML = `
+              <span class="file-icon">❌</span>
+              <span class="file-name">${file.name}</span>
+              <span class="file-size" style="color: #dc3545;">Error: ${error.message}</span>
+            `;
+            fileListDiv.appendChild(fileItem);
+          }
+        }
+        
+        resultDiv.innerText = `Uploaded ${files.length} file(s) successfully!`;
+        listFiles(); // Refresh file list
+      }
+
+      async function sendCommand() {
+        const command = promptBox.value.trim();
+        if (!command) {
+          resultDiv.innerText = "Please enter a command";
+          return;
+        }
+
+        const parts = command.split(" ");
+        const action = parts[0].toLowerCase();
+
+        try {
+          if (action === "list") {
+            await listFiles();
+            return;
+          }
+
+          const [, filename, ...content] = parts;
+          if (!filename && action !== "list") {
+            resultDiv.innerText = "Please specify a filename";
+            return;
+          }
+
+          const commandData = {
+            action,
+            filename,
+            content: content.join(" ") || "",
+          };
+
+          const response = await fetch("http://localhost:3000/mcp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(commandData),
+          });
+          
+          const data = await response.json();
+          
+          // Style result based on success/error
+          if (response.ok) {
+            resultDiv.style.borderLeftColor = "#28a745";
+            resultDiv.style.backgroundColor = "#f8fff9";
+          } else {
+            resultDiv.style.borderLeftColor = "#dc3545";
+            resultDiv.style.backgroundColor = "#fff8f8";
+          }
+          
+          resultDiv.innerText = data.message || data.error || "Operation completed";
+          
+          if (action === "create" || action === "delete") {
+            listFiles(); // Refresh file list
+          }
+        } catch (error) {
+          resultDiv.innerText = "Error: " + error.message;
+        }
+      }
+
+      async function listFiles() {
+        try {
+          const response = await fetch("http://localhost:3000/list");
+          const data = await response.json();
+          
+          if (data.files && data.files.length > 0) {
+            fileListDiv.innerHTML = "";
+            data.files.forEach(file => {
+              const fileItem = document.createElement("div");
+              fileItem.className = "file-item";
+              fileItem.innerHTML = `
+                <span class="file-icon">📄</span>
+                <span class="file-name">${file}</span>
+                <span class="file-size">Existing file</span>
+              `;
+              fileListDiv.appendChild(fileItem);
+            });
+          } else {
+            fileListDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No files in directory</div>';
+          }
+        } catch (error) {
+          console.error("Error listing files:", error);
+        }
+      }
+
+      // Load initial file list
+      listFiles();
+    </script>
+  </body>
+</html>
