@@ -2,6 +2,14 @@
 
 A **Model Context Protocol (MCP)** server implementation for filesystem operations with an integrated web-based client interface.
 
+![MCP Filesystem Client](./assets/Mcp-1.png)
+
+## 📸 Screenshots
+
+### Main Interface
+![Main Interface](./assets/Mcp-2.png)
+
+
 ## 📋 Task Overview
 
 **Task 2: MCP Basics**

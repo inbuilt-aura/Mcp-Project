@@ -83,6 +83,14 @@ Desktop.ini
 logs
 *.log
 
+# BUT keep images
+!*.png
+!*.jpg
+!*.jpeg
+!*.gif
+!*.svg
+!*.webp
+
 # Temporary files
 tmp/
 temp/
